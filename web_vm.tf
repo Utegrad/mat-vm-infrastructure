@@ -26,6 +26,7 @@ resource "azurerm_network_interface" "web_vm_main" {
     name                          = "internal"
     private_ip_address_allocation = "Dynamic"
     subnet_id = azurerm_subnet.web_vm_subnet.id
+    public_ip_address_id = azurerm_public_ip.web_pub_ip.id
   }
 }
 
