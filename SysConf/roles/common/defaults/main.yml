@@ -1,0 +1,6 @@
+# Default packages for host setup
+packages:
+  - htop
+  - tree
+  - net-tools
+  - acl

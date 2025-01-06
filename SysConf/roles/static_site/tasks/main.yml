@@ -1,0 +1,44 @@
+---
+- name: install system packages
+  become: True
+  apt: name={{ item }} state=latest
+  with_items: "{{ packages }}"
+
+- name: UFW HTTP
+  become: True
+  ufw: rule=limit port=http proto=tcp
+
+- name: UFW HTTPS
+  become: True
+  ufw: rule=limit port=https proto=tcp
+
+- name: nginx static site directory
+  become: True
+  file:
+    path: "/var/www/{{ static_site_fqdn }}"
+    state: directory
+    owner: root
+    group: www-data
+    mode: 0775
+
+# - name: nginx static site virtual host
+#   become: True
+#   template:
+#     src: nginx_static_site.j2
+#     dest: /etc/nginx/sites-available/eagle_mountain_blog
+#     backup: yes
+#     owner: root
+#     group: root
+#     mode: 0644
+#   notify:
+#     - Restart nginx
+#
+# - name: Symlink nginx static site virtual host
+#   become: True
+#   file:
+#     src: "/etc/nginx/sites-available/eagle_mountain_blog"
+#     dest: "/etc/nginx/sites-enabled/eagle_mountain_blog"
+#     owner: root
+#     group: root
+#     state: link
+#

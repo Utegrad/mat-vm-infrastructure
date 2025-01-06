@@ -1,0 +1,4 @@
+---
+static_site_fqdn: blog.emhomeowners.org
+static_site_ssl_cert_path: /etc/letsencrypt/live/blog.emhomeowners.org/fullchain.pem
+static_site_ssl_cert_key_path: /etc/letsencrypt/live/blog.emhomeowners.org/privkey.pem

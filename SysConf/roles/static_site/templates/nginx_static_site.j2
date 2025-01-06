@@ -1,0 +1,32 @@
+#$v0.02$
+#{{ ansible_managed }}
+server {
+  listen 80;
+  server_name {{ static_site_fqdn }};
+
+  # Redirect all HTTP requests to HTTPS
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  server_name {{ static_site_fqdn }};
+
+  ssl_certificate {{ static_site_ssl_cert_path }};
+  ssl_certificate_key {{ static_site_ssl_cert_key_path }};
+  root /var/www/{{ static_site_fqdn }};
+  index index.html index.htm;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location ~ /\.ht {
+    deny all;
+  }
+
+  location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+      expires 30d;
+      add_header Cache-Control "public, no-transform";
+  }
+}

@@ -1,0 +1,7 @@
+---
+
+- name: Deploy Fast API Application
+  hosts: web01
+  roles:
+    - common
+    - static_site
