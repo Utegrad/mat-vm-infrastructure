@@ -9,6 +9,36 @@ resource "azurerm_virtual_network" "vm_vnet" {
   )
 }
 
+# Route VM traffic to the Internet egress traffic through a common public IP address
+resource "azurerm_public_ip" "nat_gateway" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.rg.location
+  name                = "nat-gateway-publicIP"
+  resource_group_name = azurerm_resource_group.rg.name
+  lifecycle {
+    create_before_destroy = true
+  }
+  tags = merge(
+    azurerm_resource_group.rg.tags,
+    {}
+  )
+}
+
+resource "azurerm_nat_gateway" "vm_services" {
+  location            = azurerm_resource_group.rg.location
+  name                = "vm-services-nat-gateway"
+  resource_group_name = azurerm_resource_group.rg.name
+  tags = merge(
+    azurerm_resource_group.rg.tags,
+    {}
+  )
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "vm_services" {
+  nat_gateway_id       = azurerm_nat_gateway.vm_services.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway.id
+}
+
 resource "azurerm_subnet" "web_vm_subnet" {
   name = "web-vms"
   resource_group_name = azurerm_resource_group.rg.name
@@ -16,11 +46,21 @@ resource "azurerm_subnet" "web_vm_subnet" {
   address_prefixes = ["10.124.1.0/24"]
 }
 
+resource "azurerm_subnet_nat_gateway_association" "web_vm_subnet_nat_association" {
+  nat_gateway_id = azurerm_nat_gateway.vm_services.id
+  subnet_id      = azurerm_subnet.web_vm_subnet.id
+}
+
 resource "azurerm_subnet" "db_vm_subnet" {
   name = "db-vms"
   resource_group_name = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vm_vnet.name
   address_prefixes = ["10.124.2.0/24"]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "db_vm_subnet_nat_association" {
+  nat_gateway_id = azurerm_nat_gateway.vm_services.id
+  subnet_id      = azurerm_subnet.db_vm_subnet.id
 }
 
 resource "azurerm_network_security_group" "web_vm_nsg" {
@@ -43,6 +83,34 @@ resource "azurerm_network_security_rule" "web_vm_nsg_rule_ssh" {
   resource_group_name         = azurerm_resource_group.rg.name
   destination_address_prefix  = "*"
   destination_port_range      = "22"
+  source_address_prefix       = "*"
+  source_port_range           = "*"
+}
+
+resource "azurerm_network_security_rule" "web_vm_nsg_rule_http" {
+  access                      = "Allow"
+  direction                   = "Inbound"
+  name                        = "HTTP"
+  network_security_group_name = azurerm_network_security_group.web_vm_nsg.name
+  priority                    = 400
+  protocol                    = "Tcp"
+  resource_group_name         = azurerm_resource_group.rg.name
+  destination_address_prefix  = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "*"
+  source_port_range           = "*"
+}
+
+resource "azurerm_network_security_rule" "web_vm_nsg_rule_https" {
+  access                      = "Allow"
+  direction                   = "Inbound"
+  name                        = "HTTPS"
+  network_security_group_name = azurerm_network_security_group.web_vm_nsg.name
+  priority                    = 500
+  protocol                    = "Tcp"
+  resource_group_name         = azurerm_resource_group.rg.name
+  destination_address_prefix  = "*"
+  destination_port_range      = "443"
   source_address_prefix       = "*"
   source_port_range           = "*"
 }
