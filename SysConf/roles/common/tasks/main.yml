@@ -21,3 +21,28 @@
     backup=yes
     owner=0 group=0 mode=0600
     validate='/usr/sbin/sshd -T -f %s'
+
+- name: PyEnv Directory
+  become: True
+  file:
+    path: "{{ pyenv_dir }}"
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Clone PyEnv Repo
+  become: True
+  git:
+    repo: "https://github.com/pyenv/pyenv.git"
+    dest: "{{ pyenv_path }}"
+
+- name: Check if Python 3.11.x is installed
+  become: True
+  command: "{{ pyenv_path }}/bin/pyenv versions --bare"
+  register: pyenv_versions
+
+- name: Install Python 3.11
+  become: True
+  shell: "{{ pyenv_path }}/bin/pyenv install 3.11"
+  when: "'3.11' not in pyenv_versions.stdout"
