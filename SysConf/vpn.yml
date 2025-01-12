@@ -1,0 +1,6 @@
+---
+
+- name: Deploy Fast API Application
+  hosts: vpn01
+  roles:
+    - vpn

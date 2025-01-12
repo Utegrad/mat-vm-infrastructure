@@ -1,0 +1,41 @@
+---
+# Setup common elements for the application host
+
+- name: Install common packages
+  become: True
+  apt: name={{ item }} state=latest update_cache=True
+  with_items: "{{ packages }}"
+
+- name: UFW OpenSSH
+  become: True
+  ufw: rule=limit port=ssh proto=tcp
+
+- name: UFW Enabled
+  become: True
+  ufw: state=enabled
+
+- name: sshd basic configuration
+  become: True
+  template: src=sshd_config.j2
+    dest=/etc/ssh/sshd_config
+    backup=yes
+    owner=0 group=0 mode=0600
+    validate='/usr/sbin/sshd -T -f %s'
+
+- name: StrongSwan Packages
+  become: True
+  apt: name={{ item }} state=latest update_cache=True
+  with_items:
+    - strongswan
+    - strongswan-pki
+    - libcharon-extra-plugins
+    - libcharon-extauth-plugins
+    - libstrongswan-extra-plugins
+    - libtss2-tcti-tabrmd0
+
+- name: VPN Ports
+  become: True
+  ufw: rule=allow port={{ item }} proto=udp
+  with_items:
+    - 500
+    - 4500
