@@ -1,9 +1,14 @@
 ---
 # Setup common elements for the application host
 
+- name: Update apt cache
+  become: True
+  apt:
+   update_cache: yes
+
 - name: Install common packages
   become: True
-  apt: name={{ item }} state=latest update_cache=True
+  apt: name={{ item }} state=present
   with_items: "{{ packages }}"
 
 - name: UFW OpenSSH
@@ -24,7 +29,7 @@
 
 - name: StrongSwan Packages
   become: True
-  apt: name={{ item }} state=latest update_cache=True
+  apt: name={{ item }} state=present
   with_items:
     - strongswan
     - strongswan-pki
@@ -39,3 +44,22 @@
   with_items:
     - 500
     - 4500
+
+- name: Root CA Key
+  become: True
+  shell: "pki --gen --type rsa --size 4096 --outform pem > {{ ipsec_dir }}/private/ca-key.pem"
+  args:
+    creates: "{{ ipsec_dir }}/private/ca-key.pem"
+
+- name: Root CA Certificate
+  become: True
+  shell: "pki --self --ca --lifetime 3650 --in {{ ipsec_dir }}/private/ca-key.pem --type rsa --dn \"CN={{ ca_cert_cn }}\" --outform pem > {{ ipsec_dir }}/cacerts/ca-cert.pem"
+  args:
+    creates: "{{ ipsec_dir }}/cacerts/ca-cert.pem"
+
+- name: CA Private Key
+  become: True
+  shell: "pki --gen --type rsa --size 4096 --outform pem > {{ ipsec_dir }}/private/server-key.pem"
+  args:
+    creates: "{{ ipsec_dir }}/private/server-key.pem"
+

@@ -1,0 +1,6 @@
+---
+
+vpn_fqdn: mat-vpn01-00be60.westus2.cloudapp.azure.com
+vpn_client_subnet: 10.124.7.0/24
+ca_cert_cn: MATS VPN
+ipsec_dir: /etc/ipsec.d
