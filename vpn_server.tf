@@ -1,12 +1,10 @@
-resource "azurerm_public_ip" "vpn" {
-  allocation_method   = "Static"
+resource "azurerm_public_ip" "vpn2" {
+  allocation_method   = "Dynamic"
   location            = azurerm_resource_group.rg.location
-  name                = "vpn-pub-ip"
-  domain_name_label   = "mat-${local.vpn_vm_name}-${local.suffix}"
+  name                = "vpn-pub-ip2"
   resource_group_name = azurerm_resource_group.rg.name
-  lifecycle {
-    create_before_destroy = true
-  }
+  domain_name_label   = "mat-${local.vpn_vm_name}-${local.suffix}"
+  sku = "Basic"
   tags = merge(
     azurerm_resource_group.rg.tags,
     {}
@@ -73,7 +71,7 @@ resource "azurerm_network_interface" "vpn_vm_main" {
     name                          = "internal"
     private_ip_address_allocation = "Dynamic"
     subnet_id = azurerm_subnet.vpn.id
-    public_ip_address_id = azurerm_public_ip.vpn.id
+    public_ip_address_id = azurerm_public_ip.vpn2.id
   }
 }
 
