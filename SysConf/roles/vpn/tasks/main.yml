@@ -63,3 +63,34 @@
   args:
     creates: "{{ ipsec_dir }}/private/server-key.pem"
 
+- name: VPN Server Certificate
+  become: True
+  args:
+    creates: "{{ ipsec_dir }}/certs/server-cert.pem"
+  shell: |
+    pki --pub --in {{ ipsec_dir }}/private/server-key.pem --type rsa \
+    | pki --issue --lifetime 1825 \
+        --cacert {{ ipsec_dir }}/cacerts/ca-cert.pem \
+        --cakey {{ ipsec_dir }}/private/ca-key.pem \
+        --dn 'CN={{ vpn_fqdn }}' --san {{ vpn_fqdn }} \
+        --flag serverAuth --flag ikeIntermediate --outform pem \
+        > {{ ipsec_dir }}/certs/server-cert.pem
+
+- name: StrongSwan Configuration
+  become: True
+  template:
+    src: ipsec.conf.j2
+    dest: /etc/ipsec.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: Restart StrongSwan
+
+
+- name: Add server key to ipsec.secrets
+  become: True
+  lineinfile:
+    path: /etc/ipsec.secrets
+    line: ': RSA "server-key.pem"'
+  notify: Restart StrongSwan

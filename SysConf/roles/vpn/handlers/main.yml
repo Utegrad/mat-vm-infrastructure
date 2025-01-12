@@ -1,0 +1,7 @@
+---
+
+- name: Restart StrongSwan
+  become: True
+  service:
+    name: strongswan-starter
+    state: restarted
