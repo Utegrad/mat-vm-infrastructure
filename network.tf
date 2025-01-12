@@ -39,6 +39,13 @@ resource "azurerm_nat_gateway_public_ip_association" "vm_services" {
   public_ip_address_id = azurerm_public_ip.nat_gateway.id
 }
 
+resource "azurerm_subnet" "vpn" {
+  address_prefixes = ["10.124.0.0/27"]
+  name                 = "vpn"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vm_vnet.name
+}
+
 resource "azurerm_subnet" "web_vm_subnet" {
   name = "web-vms"
   resource_group_name = azurerm_resource_group.rg.name
